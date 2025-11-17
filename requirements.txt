@@ -1,0 +1,11 @@
+# Requirements for hardware testing processes
+
+PyVisa-py 
+serial
+pyserial
+Numpy
+MatplotLib
+zeroconf
+pyusb
+pyutils
+psutil
