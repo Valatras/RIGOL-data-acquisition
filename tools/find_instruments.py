@@ -28,6 +28,9 @@ class RigolInstrument:
 
     def write(self, command):
         self.inst.write(command)
+    
+    def query(self, command):
+        return self.inst.query(command)
 
     def read(self):
         return self.inst.read()
