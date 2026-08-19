@@ -1,6 +1,8 @@
 import time
 import sys
 import os
+import csv
+
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
@@ -56,26 +58,49 @@ def generator_exponential_signal():
     generator.write("OUTP1 OFF")
 
 # Exercice 5
-def generator_square_signal():
-    """signal carré"""
-    
-    generator.write("FUNCtion:SQUare:DCYCle 60")
+def generator_square_signal_record():
+    """Signal carré et enregistrement CSV"""
 
-    time.sleep(1)  # Pause pour s’assurer que la commande est prise en compte
+    csv_file = "square_signal.csv"
+    data = []
+
+    # Configuration initiale
+    generator.write("FUNCtion:SQUare:DCYCle 60")
+    time.sleep(1)
     generator.write("OUTP1 ON")
     time.sleep(1)
+
+    start_time = time.time()
     i = 1
-    while i < 10:
-        # Square wave sur Channel 1 
+    while i < 20:
         if i % 2 == 0:
             generator.write("APPLy:SQUare 1250,2.3,2.3")
         else:
             generator.write("APPLy:SQUare 1250,4.3,2.3")
-        time.sleep(2)
-        i+=1
 
-   # Temps pour observer à l’oscillo
+        # Mesurer toutes les 0.1 s pendant 2 secondes
+        t0 = time.time()
+        while time.time() - t0 < 2:
+            timestamp = time.time() - start_time
+            # lecture des données
+            vin = float(oscilloscope.query(":MEASure:VPP? CHAN1"))
+            vout = float(oscilloscope.query(":MEASure:VPP? CHAN2"))
+
+            data.append([timestamp, vin, vout])
+            time.sleep(0.1)
+
+        i += 1
+
     generator.write("OUTP1 OFF")
+
+    # Sauvegarde CSV
+    with open(csv_file, mode="w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["timestamp", "signal_input", "signal_output"])
+        writer.writerows(data)
+
+    print(f"Données enregistrées dans {csv_file}")
+
 
 
 # ==================================== FONCTIONS POUR L'OSCILLOSCOPE ====================================
@@ -110,7 +135,7 @@ if __name__ == "__main__":
         #generator_timed_signal()
         #generator_sine_signal()
         #generator_exponential_signal()
-        generator_square_signal()
+        #generator_square_signal_record()
         
     else:
         print("Générateur de signal non détecté !")
@@ -118,7 +143,7 @@ if __name__ == "__main__":
 
     if oscilloscope:
         print("Oscilloscope détecté.")
-        #test_channel_1()
+        test_channel_1()
         
     else:
         print("Oscilloscope non détecté !")
@@ -127,13 +152,13 @@ if __name__ == "__main__":
         print("instruments détectés.")
         observe_exponential_signal()
 
-    try:
+    if generator is not None:
         generator.close()
-    except Exception as e:
-        print("instrument unavailable : ", e)
-    
-    try:
+    else:
+        print("Générateur indisponible.")
+
+    if oscilloscope is not None:
         oscilloscope.close()
-    except Exception as e:
-        print("instrument unavailable : ", e)
+    else:
+        print("Oscilloscope indisponible.")
     
