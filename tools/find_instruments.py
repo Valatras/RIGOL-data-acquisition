@@ -1,6 +1,7 @@
 import pyvisa
 import time
 
+
 class RigolInstrument:
     def __init__(self, resource_name):
         self.inst = pyvisa.ResourceManager('@py').open_resource(resource_name)
@@ -28,7 +29,7 @@ class RigolInstrument:
 
     def write(self, command):
         self.inst.write(command)
-    
+
     def query(self, command):
         return self.inst.query(command)
 
@@ -37,15 +38,15 @@ class RigolInstrument:
 
     def close(self):
         self.inst.close()
-    
+
     def __str__(self):
         return f"{self.instrument_type.capitalize()} - IDN: {self.idn}"
 
 
 def detect_rigol_instruments():
     """Retourne un tuple (generator, oscilloscope) si présents, sinon None."""
-    rm = pyvisa.ResourceManager('@py')
-    devices = [d for d in rm.list_resources() if "USB" in d]
+    devices = [d for d in pyvisa.ResourceManager(
+        '@py').list_resources() if "USB" in d]
 
     generator = None
     oscilloscope = None
@@ -55,9 +56,10 @@ def detect_rigol_instruments():
         rigol = RigolInstrument(dev)
         if rigol.instrument_type == "generator":
             generator = rigol
-            print(f"Detected Generator: {generator}")
+            print(f"Detected Generator: {generator} \n USB Address: {dev}")
         elif rigol.instrument_type == "oscilloscope":
             oscilloscope = rigol
-            print(f"Detected Oscilloscope: {oscilloscope}")
+            print(
+                f"Detected Oscilloscope: {oscilloscope} \n USB Address: {dev}")
 
     return generator, oscilloscope
